@@ -1,6 +1,6 @@
 # Realtime course deadline notifications
 
-The working path is short: create a learner channel, start the service, then post a deadline. Infrai keeps realtime calls behind one API and a single `INFRAI_API_KEY`, so this Node service can publish events and mint browser credentials without pulling in a vendor SDK. The browser gets only a scoped, short-lived token; the service key stays on the server, which is the boundary that matters in a Next.js app too.
+The working path is short: create a learner channel, start the service, then post a deadline. Infrai keeps the realtime calls behind one API and a single `INFRAI_API_KEY`, so this Node service can publish events and mint browser credentials without adding a vendor SDK. The browser receives only a scoped, short-lived token; the service key stays on the server, which is the important boundary in a Next.js app too.
 
 ## Run the deadline path
 
@@ -12,7 +12,7 @@ cp .env.example .env
 export INFRAI_API_KEY="your_key_here"
 ```
 
-Create the private channel for one course and learner. This is the normal setup step at enrollment time:
+Create the private channel for one course and learner. This is the normal enrollment-time setup step:
 
 ```bash
 npm run setup:channel -- typescript-201 learner-42
@@ -42,7 +42,7 @@ When the deadline is within 24 hours, the response is concrete and observable:
 }
 ```
 
-Outside that window, the service returns `status: "skipped"` and does not publish. That rule lives in `src/deadline_policy.ts`, separate from HTTP and realtime delivery.
+Outside that window, the service returns `status: "skipped"` and does not publish. That decision lives in `src/deadline_policy.ts`, separate from HTTP and realtime delivery.
 
 ## Hand a token to the Next.js client
 
@@ -54,7 +54,7 @@ curl -X POST http://localhost:3000/api/realtime-token \
   -d '{"learnerId":"learner-42","courseId":"typescript-201"}'
 ```
 
-The one real gotcha is where credentials live: a secret must never use a `NEXT_PUBLIC_` variable. Return the scoped token from this authenticated route and let the browser use that token for its realtime connection.
+The one real gotcha is credential placement: a secret must never use a `NEXT_PUBLIC_` variable. Return the scoped token from this authenticated route and let the browser use that token for its realtime connection.
 
 ## Check the business rule
 
@@ -65,7 +65,7 @@ npm test
 npm run typecheck
 ```
 
-The thin client decodes Infrai's `{ ok, data, error, metadata }` envelope before it inspects the HTTP status and returns the typed `data` value on success. Channel creation and publication carry stable idempotency keys, so repeated delivery attempts map to the same enrollment or assignment event.
+The thin client decodes Infrai's `{ ok, data, error, metadata }` envelope before interpreting the HTTP status and returns the typed `data` value on success. Channel creation and publication carry stable idempotency keys, so repeated delivery attempts represent the same enrollment or assignment event.
 
 ## Scope
 
